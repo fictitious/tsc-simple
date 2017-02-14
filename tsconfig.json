@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    "declaration": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "noLib": true,
+    "typeRoots": []
+  },
+  "files": [
+    "node_modules/typescript/lib/lib.es5.d.ts",
+    "node_modules/typescript/lib/lib.es2015.core.d.ts",
+    "node_modules/typescript/lib/lib.es2015.collection.d.ts",
+    "node_modules/typescript/lib/lib.es2015.iterable.d.ts",
+
+    "src/tsc-simple.ts"
+  ]
+}

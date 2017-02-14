@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    "declaration": false,
+    "removeComments": true,
+    "sourceMap": true,
+    "outDir": "test",
+    "noLib": true,
+    "typeRoots": ["../../node_modules/@types"],
+    "types": ["mocha", "chai"]
+  },
+  "files": [
+    "node_modules/typescript/lib/lib.es5.d.ts",
+    "node_modules/typescript/lib/lib.es2015.core.d.ts",
+    "node_modules/typescript/lib/lib.es2015.collection.d.ts",
+
+    "test-src/test.ts"
+  ]
+}
