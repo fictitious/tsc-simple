@@ -18,5 +18,14 @@
   "scripts": {
     "tsc": "tsc",
     "test": "tsc -p tsconfig.test.json ; mocha -u tdd -s 2600"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fictitious/tsc-simple"
+  },
+  "author": {
+    "name" : "Artem Khodyush",
+    "email" : "greenkaa@gmail.com",
+    "url" : "https://github.com/fictitious/"
   }
 }
