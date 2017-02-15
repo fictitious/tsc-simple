@@ -49,7 +49,14 @@ export function createCompiler({
 
     if (tsconfig) {
         let diagnostics: ts.Diagnostic[];
-        ({options, fileNames, errors: diagnostics} = ts.parseJsonConfigFileContent(tsconfig, ts.sys, basePath || ts.sys.getCurrentDirectory(), {}, '<tsconfig>'));
+        if (tsconfig.extends && !ts.sys.fileExists(tsconfig.extends)) {
+            diagnostics = [{
+                messageText: `Cannot read file ${tsconfig.extends}`,
+                code: 5012
+            } as ts.Diagnostic];
+        } else {
+            ({options, fileNames, errors: diagnostics} = ts.parseJsonConfigFileContent(tsconfig, ts.sys, basePath || ts.sys.getCurrentDirectory(), {}, '<tsconfig>'));
+        }
         if (diagnostics.length > 0) {
             throw new Error(diagnostics.map(d => ts.flattenDiagnosticMessageText(d.messageText, ts.sys.newLine)).join(ts.sys.newLine));
         }
