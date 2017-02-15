@@ -1,12 +1,10 @@
 # Minimal usable interface for TypeScript compiler
 
-```
-npm install tsc-simple
-```
+    $ npm install tsc-simple
 
-## create compiler with default options and default library, compile a string
+### create compiler with default options and default library, compile a string
 
-```
+```typescript
 import {createCompiler, CompileResult} from 'tsc-simple';
 
 const compiler = createCompiler({defaultLibLocation: 'node_modules/typescript/lib'});
@@ -15,8 +13,8 @@ const r: CompileResult = compiler.compile('let x = 3 + 2');
 
 ```
 
-the following properties and methods are available in CompileResult:
-```
+the following properties and methods are available in `CompileResult`:
+```typescript
     sourceFile: ts.SourceFile;
     diagnostics: Diagnostic[];
     program: ts.Program;
@@ -26,9 +24,17 @@ the following properties and methods are available in CompileResult:
 
 ```
 
-## create compiler with specific options and library files
+`tsc-simple` compiler does not write any files. If you need to obtain generated javascript,
+declaration files, or sourcemaps, you have to provide `onOutput` callback as the second argument to `compile`:
+```typescript
+    const out: {[name: string]: string} = {};
 
+    const r = compiler.compile('let x = 3 + 2', (name, text) => {out[name] = text});
 ```
+
+### create compiler with specific options and library files
+
+```typescript
     const tsconfig = {
         "compilerOptions": {
             "declaration": true,
@@ -44,15 +50,15 @@ the following properties and methods are available in CompileResult:
     const compiler = createCompiler({tsconfig});
 
     const r = compiler.compile('let x = z + 2');
-    const dd = r.diagnostics.map(d => r.formatDiagnostic(d));
-    console.dir(dd);     // ['<source>(1,9): Error TS2304: Cannot find name \'z\'.']
+    const messages = r.diagnostics.map(d => r.formatDiagnostic(d));
+    console.dir(messages);     // ['<source>(1,9): Error TS2304: Cannot find name \'z\'.']
 
 
 ```
 
-## compile two modules, one importing another
+### compile two modules, one importing another
 
-```
+```typescript
     const r = compiler.compileMap(new Map([
         ['A.ts', 'export class A {}'],
         ['B.ts', `import {A} from 'A'; export class B extends A {}`]
