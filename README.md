@@ -64,3 +64,10 @@ declaration files, or sourcemaps, you have to provide `onOutput` callback as the
         ['B.ts', `import {A} from 'A'; export class B extends A {}`]
     ]));
 ```
+
+### check syntax only, without name binding, type checking and emitting
+
+```typescript
+    const r = compiler.parse('let x = z + 2');
+    console.log(r.diagnostics.length); // 0 = no errors
+```
