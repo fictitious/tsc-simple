@@ -63,7 +63,7 @@ suite('A', function() {
                 globalError = r.formatDiagnostic(d);
             }
         });
-        assert.deepEqual(diagnosticTypes, {option: true, global: true});
+        assert.deepEqual(diagnosticTypes, {option: true, global: true, semantic: true});
         assert.match(optionError, /^Error TS5012: Cannot read file/);
         assert.match(globalError, /^Error TS2318: Cannot find global type/);
     });

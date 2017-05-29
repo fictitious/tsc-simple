@@ -50,6 +50,9 @@ export function createCompiler({
     if (tsconfig) {
         let diagnostics: ts.Diagnostic[];
         ({options, fileNames, errors: diagnostics} = ts.parseJsonConfigFileContent(tsconfig, ts.sys, basePath || ts.sys.getCurrentDirectory(), {}, '<tsconfig>'));
+        if (!tsconfig.files) {
+            fileNames = []; // with no files in tsconfig, ts.parseJsonConfigFileContent will scan and add all ts files in current directory. fix that.
+        }
         if (diagnostics.length > 0) {
             throw new Error(diagnostics.map(d => ts.flattenDiagnosticMessageText(d.messageText, ts.sys.newLine)).join(ts.sys.newLine));
         }
@@ -177,16 +180,14 @@ export function createCompiler({
 
     interface GetProgramDiagnostics {
         program: ts.Program;
-        sourceTexts: SourceTexts;
         parseOnly: boolean;
     }
-    function getProgramDiagnostics({program, sourceTexts, parseOnly}: GetProgramDiagnostics): Diagnostic[] {
+    function getProgramDiagnostics({program, parseOnly}: GetProgramDiagnostics): Diagnostic[] {
         let diagnostics: Diagnostic[] = [...program.getOptionsDiagnostics().map((d): Diagnostic => ({...d, diagnosticType: 'option'}))];
         if (!parseOnly) {
             diagnostics.push(...program.getGlobalDiagnostics().map((d): Diagnostic => ({...d, diagnosticType: 'global'})));
         }
-        sourceTexts.forEach(sourceText => {
-            const sourceFile = sourceText.sourceFile;
+        program.getSourceFiles().forEach(sourceFile => {
             diagnostics.push(...program.getSyntacticDiagnostics(sourceFile).map((d): Diagnostic => ({...d, diagnosticType: 'syntactic'})));
             if (!parseOnly) {
                 diagnostics.push(...program.getSemanticDiagnostics(sourceFile).map((d): Diagnostic => ({...d, diagnosticType: 'semantic'})));
@@ -242,7 +243,7 @@ export function createCompiler({
         }
         return {
             program,
-            diagnostics: getProgramDiagnostics({program, sourceTexts, parseOnly}),
+            diagnostics: getProgramDiagnostics({program, parseOnly}),
             formatDiagnostic: (d: ts.Diagnostic) => formatDiagnostic(d),
             getSourceFileNames: () => getSourceFileNames(sourceTexts),
             getSourceFile: (n: string) => getSourceFile(sourceTexts, n, languageVersion)
