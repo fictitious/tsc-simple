@@ -2,7 +2,7 @@
   "name": "tsc-simple",
   "description": "Minimal usable interface for TypeScript compiler",
   "license": "Apache-2.0",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "dependencies": {
     "typescript": "^2.1.0"
   },
