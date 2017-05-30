@@ -30,13 +30,17 @@ export interface CreateCompiler {
     basePath?: string; // for resolving relative paths in tsconfig. default is cwd()
     defaultLibFileName?: string;
     defaultLibLocation?: string;
+    sys?: ts.System & {parseJsonConfigFileContent?(tsconfig: any, host: ts.ParseConfigHost, basePath: string, existingOptions?: ts.CompilerOptions, configFileName?: string, resolutionStack?: ts.Path[], extraFileExtensions?: ts.JsFileExtensionInfo[]): ts.ParsedCommandLine};
 }
 export function createCompiler({
     tsconfig,
     basePath,
     defaultLibFileName,
-    defaultLibLocation
+    defaultLibLocation,
+    sys
 }: CreateCompiler): Compiler {
+
+    const system = sys || ts.sys;
 
     interface SourceText {
         text: string;
@@ -49,12 +53,13 @@ export function createCompiler({
 
     if (tsconfig) {
         let diagnostics: ts.Diagnostic[];
-        ({options, fileNames, errors: diagnostics} = ts.parseJsonConfigFileContent(tsconfig, ts.sys, basePath || ts.sys.getCurrentDirectory(), {}, '<tsconfig>'));
+        let parseConfig = (sys && sys.parseJsonConfigFileContent) ? sys.parseJsonConfigFileContent.bind(sys) : ts.parseJsonConfigFileContent;
+        ({options, fileNames, errors: diagnostics} = parseConfig(tsconfig, system, basePath || system.getCurrentDirectory(), {}, '<tsconfig>'));
         if (!tsconfig.files) {
             fileNames = []; // with no files in tsconfig, ts.parseJsonConfigFileContent will scan and add all ts files in current directory. fix that.
         }
         if (diagnostics.length > 0) {
-            throw new Error(diagnostics.map(d => ts.flattenDiagnosticMessageText(d.messageText, ts.sys.newLine)).join(ts.sys.newLine));
+            throw new Error(diagnostics.map(d => ts.flattenDiagnosticMessageText(d.messageText, system.newLine)).join(system.newLine));
         }
     } else {
         options = ts.getDefaultCompilerOptions();
@@ -67,7 +72,7 @@ export function createCompiler({
         if (!sourceFile) {
             let text = '';
             try {
-                text = ts.sys.readFile(fileName);
+                text = system.readFile(fileName);
             } catch(e) {
                 if (onError) onError(e.message);
             }
@@ -110,7 +115,7 @@ export function createCompiler({
             if (sourceFile) {
                 text = sourceFile.text;
             } else {
-                text = ts.sys.readFile(fileName);
+                text = system.readFile(fileName);
             }
         }
         return text;
@@ -149,14 +154,14 @@ export function createCompiler({
             writeFile: (name, text): void => onWrite ? onWrite(name, text) : void 0,
             getDefaultLibFileName: () => `${defaultLibLocation ? `${defaultLibLocation}/` : ''}${defaultLibFileName || 'lib.d.ts'}`,
             getDefaultLibLocation: defaultLibLocation ? (() => defaultLibLocation) : undefined,
-            useCaseSensitiveFileNames: () =>  ts.sys.useCaseSensitiveFileNames,
-            getCanonicalFileName: (fileName: string):string =>  ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase(),
-            getCurrentDirectory: () => ts.sys.getCurrentDirectory(),
-            getNewLine: () => ts.sys.newLine,
-            fileExists: (fileName: string): boolean => sourceTexts.has(fileName) || permanentSourceFiles.has(fileName) || ts.sys.fileExists(fileName),
+            useCaseSensitiveFileNames: () =>  system.useCaseSensitiveFileNames,
+            getCanonicalFileName: (fileName: string):string =>  system.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase(),
+            getCurrentDirectory: () => system.getCurrentDirectory(),
+            getNewLine: () => system.newLine,
+            fileExists: (fileName: string): boolean => sourceTexts.has(fileName) || permanentSourceFiles.has(fileName) || system.fileExists(fileName),
             readFile: (fileName: string) => readFile(sourceTexts, fileName),
-            directoryExists: (directoryName) => ts.sys.directoryExists(directoryName),
-            getDirectories: (path: string): string[] => ts.sys.getDirectories(path),
+            directoryExists: (directoryName) => system.directoryExists(directoryName),
+            getDirectories: (path: string): string[] => system.getDirectories(path),
             resolveModuleNames: function(this: ts.CompilerHost, moduleNames: string[], containingFile: string): ts.ResolvedModule[] {
                 return resolveModuleNames(sourceTexts, moduleNames, containingFile, this)
             }
@@ -174,7 +179,7 @@ export function createCompiler({
             }
         }
         const category = ts.DiagnosticCategory[d.category];
-        const message = ts.flattenDiagnosticMessageText(d.messageText, ts.sys.newLine);
+        const message = ts.flattenDiagnosticMessageText(d.messageText, system.newLine);
         return `${fileName}${lineCol}${category} TS${d.code}: ${message}`;
     }
 
