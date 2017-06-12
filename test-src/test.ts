@@ -52,14 +52,14 @@ suite('A', function() {
         const compiler = createCompiler({});
         const r = compiler.compile('let x = 3 + 2');
         const diagnosticTypes: {[t: string]: boolean} = {};
-        let optionError: string | undefined = undefined;
-        let globalError: string | undefined = undefined;
+        let optionError: string = '';
+        let globalError: string = '';
         r.diagnostics.forEach(d => {
             diagnosticTypes[d.diagnosticType] = true;
-            if (d.diagnosticType === 'option' && optionError === undefined) {
+            if (d.diagnosticType === 'option' && optionError === '') {
                 optionError = r.formatDiagnostic(d);
             }
-            if (d.diagnosticType === 'global' && globalError === undefined) {
+            if (d.diagnosticType === 'global' && globalError === '') {
                 globalError = r.formatDiagnostic(d);
             }
         });
