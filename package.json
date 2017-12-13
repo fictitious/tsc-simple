@@ -2,9 +2,9 @@
   "name": "tsc-simple",
   "description": "Minimal usable interface for TypeScript compiler",
   "license": "Apache-2.0",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "dependencies": {
-    "typescript": "^2.3.0"
+    "typescript": "^2.6.2"
   },
   "devDependencies": {
     "mocha": "^3.2.0",
@@ -12,21 +12,25 @@
     "chai": "^3.5.0",
     "@types/chai": "^3.4.34"
   },
-  "main": "dist/tsc-simple.js",
-  "types": "dist/tsc-simple.d.ts",
-  "files": ["dist"],
-  "engines" : { "node" : ">=6.0.0" },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=8.0.0"
+  },
   "scripts": {
     "tsc": "tsc",
-    "test": "tsc -p tsconfig.test.json ; mocha -u tdd -s 2600"
+    "test": "tsc -p tsconfig.test.json ; mocha -u tdd -t 3000 -s 1700 dist.test/**/*.test.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fictitious/tsc-simple"
   },
   "author": {
-    "name" : "Artem Khodyush",
-    "email" : "greenkaa@gmail.com",
-    "url" : "https://github.com/fictitious/"
+    "name": "Artem Khodyush",
+    "email": "greenkaa@gmail.com",
+    "url": "https://github.com/fictitious/"
   }
 }

@@ -11,15 +11,10 @@
     "removeComments": true,
     "sourceMap": true,
     "outDir": "dist",
-    "noLib": true,
+    "lib": ["es5", "es2015.core", "es2015.collection", "es2015.iterable"],
     "typeRoots": []
   },
   "files": [
-    "node_modules/typescript/lib/lib.es5.d.ts",
-    "node_modules/typescript/lib/lib.es2015.core.d.ts",
-    "node_modules/typescript/lib/lib.es2015.collection.d.ts",
-    "node_modules/typescript/lib/lib.es2015.iterable.d.ts",
-
-    "src/tsc-simple.ts"
+    "index.ts"
   ]
 }

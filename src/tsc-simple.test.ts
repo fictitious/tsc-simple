@@ -1,10 +1,10 @@
 
 import * as ts from 'typescript';
-import {createCompiler} from '../dist/tsc-simple';
+import {createCompiler} from './tsc-simple';
 
 import {assert} from 'chai';
 
-suite('A', function() {
+suite('tsc-simple', function() {
 
     const tsconfig = {
         "compilerOptions": {
@@ -17,7 +17,6 @@ suite('A', function() {
             "node_modules/typescript/lib/lib.es2015.core.d.ts"
         ]
     };
-
 
     test('a', function() {
         const compiler = createCompiler({tsconfig});
@@ -43,39 +42,24 @@ suite('A', function() {
         assert.lengthOf(r2.diagnostics, 1);
         assert.equal(r2.formatDiagnostic(r2.diagnostics[0]), '<source>(1,9): Error TS2304: Cannot find name \'z\'.');
 
-        const r3 = compiler.compileMap(new Map([['A.ts', 'export class A {}'], ['B.ts', `import {A} from 'A'; export class B extends A {}`]]));
+        const r3 = compiler.compileMap(new Map([['A.ts', 'export class A {}'], ['B.ts', `import {A} from './A'; export class B extends A {}`]]));
         assert.lengthOf(r3.diagnostics, 0);
     });
-
 
     test('b', function() {
         const compiler = createCompiler({});
         const r = compiler.compile('let x = 3 + 2');
-        const diagnosticTypes: {[t: string]: boolean} = {};
-        let optionError: string = '';
-        let globalError: string = '';
-        r.diagnostics.forEach(d => {
-            diagnosticTypes[d.diagnosticType] = true;
-            if (d.diagnosticType === 'option' && optionError === '') {
-                optionError = r.formatDiagnostic(d);
-            }
-            if (d.diagnosticType === 'global' && globalError === '') {
-                globalError = r.formatDiagnostic(d);
-            }
-        });
-        assert.deepEqual(diagnosticTypes, {option: true, global: true, semantic: true});
-        assert.match(optionError, /^Error TS5012: Cannot read file/);
-        assert.match(globalError, /^Error TS2318: Cannot find global type/);
+        assert.deepEqual(r.diagnostics, []);
     });
 
     test('c', function() {
-        const compiler = createCompiler({defaultLibLocation: 'node_modules/typescript/lib', tsconfig: {compilerOptions: {lib: ['es6']}}});
+        const compiler = createCompiler({tsconfig: {compilerOptions: {lib: ['es6']}}});
         const r = compiler.compile('let x = 3 + 2');
         assert.deepEqual(r.diagnostics, []);
     });
 
     test('d', function() {
-        const compiler = createCompiler({defaultLibLocation: 'node_modules/typescript/lib'});
+        const compiler = createCompiler({});
         const r = compiler.compile('let x = 3 + 2');
         assert.deepEqual(r.diagnostics, []);
     });
