@@ -22,10 +22,10 @@ export interface CompileMapResult {
 }
 
 
-function parseTsConfig(system: ts.System, tsconfig?: {files?: string[], include?: string[]}, basePath?: string): {options: ts.CompilerOptions, fileNames: string[], errors: ts.Diagnostic[]} {
+function parseTsConfig(system: ts.System, tsconfig?: {files?: string[], include?: string[]}, basePath?: string, configFileName?: string): {options: ts.CompilerOptions, fileNames: string[], errors: ts.Diagnostic[]} {
     if (tsconfig) {
         const config = tsconfig.files || tsconfig.include ? tsconfig : {...tsconfig, include: []}; // stop it from scanning and adding all ts files from current directory
-        const {options, fileNames, errors} = ts.parseJsonConfigFileContent(config, system, basePath || system.getCurrentDirectory(), {}, '<tsconfig>');
+        const {options, fileNames, errors} = ts.parseJsonConfigFileContent(config, system, basePath || system.getCurrentDirectory(), {}, configFileName || '<tsconfig>');
         return {options, fileNames, errors: errors.filter(e => e.code !== 18003)}; // no input files is not an error here
     } else {
         return {options: ts.getDefaultCompilerOptions(), fileNames: [], errors: []};
@@ -50,7 +50,7 @@ function formatDiagnostic(d: ts.Diagnostic, system: ts.System, theOnlySourceFile
 
 export interface GetProgramDiagnostics {
     program: ts.Program;
-    parseOnly: boolean;
+    parseOnly?: boolean;
 }
 function getProgramDiagnostics({program, parseOnly}: GetProgramDiagnostics): Diagnostic[] {
     let diagnostics: Diagnostic[] = [...program.getOptionsDiagnostics().map((d): Diagnostic => ({...d, diagnosticType: 'option'}))];
