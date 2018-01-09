@@ -61,7 +61,9 @@ function getProgramDiagnostics({program, parseOnly}: GetProgramDiagnostics): Dia
         diagnostics.push(...program.getSyntacticDiagnostics(sourceFile).map((d): Diagnostic => ({...d, diagnosticType: 'syntactic'})));
         if (!parseOnly) {
             diagnostics.push(...program.getSemanticDiagnostics(sourceFile).map((d): Diagnostic => ({...d, diagnosticType: 'semantic'})));
-            diagnostics.push(...program.getDeclarationDiagnostics(sourceFile).map((d): Diagnostic => ({...d, diagnosticType: 'declaration'})));
+            if (program.getCompilerOptions().declaration) {
+                diagnostics.push(...program.getDeclarationDiagnostics(sourceFile).map((d): Diagnostic => ({...d, diagnosticType: 'declaration'})));
+            }
         }
     });
     return diagnostics;
