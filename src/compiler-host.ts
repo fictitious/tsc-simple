@@ -34,7 +34,7 @@ function createCompilerHost(sys: ts.System, options: ts.CompilerOptions, setPare
         return sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase();
     }
 
-    function getSourceFile(fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile | undefined {
+    function getSourceFile(fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void): ts.SourceFile {
         let text: string | undefined;
         try {
             text = sys.readFile(fileName, options.charset);
@@ -46,7 +46,7 @@ function createCompilerHost(sys: ts.System, options: ts.CompilerOptions, setPare
             text = "";
         }
 
-        return text !== undefined ? ts.createSourceFile(fileName, text, languageVersion, setParentNodes) : undefined;
+        return ts.createSourceFile(fileName, text || '', languageVersion, setParentNodes)
     }
 
     function directoryExists(directoryPath: string): boolean {

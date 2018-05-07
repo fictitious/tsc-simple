@@ -37,7 +37,7 @@ function createSimpleSys(sys: ts.System, sources: Map<string, string>, onWrite?:
         },
 
         // readDirectory is not composable and can not be extended, only reimplemented.
-        // fortunately that's not necessary for this to work
+        // fortunately it's not necessary for this to work
     });
 }
 
