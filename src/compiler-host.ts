@@ -25,8 +25,10 @@ interface OutputFingerprint {
     mtime: Date;
 }
 
-function createCompilerHost(sys: ts.System, options: ts.CompilerOptions, setParentNodes?: boolean): ts.CompilerHost {
-    const existingDirectories = ts.createMap<boolean>();
+// identical to TypeScipt built-in createCompilerHost
+// except that this one takes sys as arguments
+function createCompilerHost(tsInstance: typeof ts, sys: ts.System, options: ts.CompilerOptions, setParentNodes?: boolean): ts.CompilerHost {
+    const existingDirectories = tsInstance.createMap<boolean>();
 
     function getCanonicalFileName(fileName: string): string {
         // if underlying system can distinguish between two files whose names differs only in cases then file name already in canonical form.
@@ -46,7 +48,7 @@ function createCompilerHost(sys: ts.System, options: ts.CompilerOptions, setPare
             text = "";
         }
 
-        return ts.createSourceFile(fileName, text || '', languageVersion, setParentNodes)
+        return tsInstance.createSourceFile(fileName, text || '', languageVersion, setParentNodes)
     }
 
     function directoryExists(directoryPath: string): boolean {
@@ -61,8 +63,8 @@ function createCompilerHost(sys: ts.System, options: ts.CompilerOptions, setPare
     }
 
     function ensureDirectoriesExist(directoryPath: string) {
-        if (directoryPath.length > ts.getRootLength(directoryPath) && !directoryExists(directoryPath)) {
-            const parentDirectory = ts.getDirectoryPath(directoryPath);
+        if (directoryPath.length > tsInstance.getRootLength(directoryPath) && !directoryExists(directoryPath)) {
+            const parentDirectory = tsInstance.getDirectoryPath(directoryPath);
             ensureDirectoriesExist(parentDirectory);
             sys.createDirectory(directoryPath);
         }
@@ -72,7 +74,7 @@ function createCompilerHost(sys: ts.System, options: ts.CompilerOptions, setPare
 
     function writeFileIfUpdated(fileName: string, data: string, writeByteOrderMark: boolean): void {
         if (!outputFingerprints) {
-            outputFingerprints = ts.createMap<OutputFingerprint>();
+            outputFingerprints = tsInstance.createMap<OutputFingerprint>();
         }
 
         const hash = sys.createHash!(data);
@@ -102,9 +104,9 @@ function createCompilerHost(sys: ts.System, options: ts.CompilerOptions, setPare
 
     function writeFile(fileName: string, data: string, writeByteOrderMark: boolean, onError?: (message: string) => void) {
         try {
-            ensureDirectoriesExist(ts.getDirectoryPath(ts.normalizePath(fileName)));
+            ensureDirectoriesExist(tsInstance.getDirectoryPath(tsInstance.normalizePath(fileName)));
 
-            if (ts.isWatchSet(options) && sys.createHash && sys.getModifiedTime) {
+            if (tsInstance.isWatchSet(options) && sys.createHash && sys.getModifiedTime) {
                 writeFileIfUpdated(fileName, data, writeByteOrderMark);
             }
             else {
@@ -120,18 +122,18 @@ function createCompilerHost(sys: ts.System, options: ts.CompilerOptions, setPare
     }
 
     function getDefaultLibLocation(): string {
-        return ts.getDirectoryPath(ts.normalizePath(sys.getExecutingFilePath()));
+        return tsInstance.getDirectoryPath(tsInstance.normalizePath(sys.getExecutingFilePath()));
     }
 
-    const newLine = ts.getNewLineCharacter(options);
+    const newLine = tsInstance.getNewLineCharacter(options);
     const realpath = sys.realpath && ((path: string) => sys.realpath!(path));
 
     return {
         getSourceFile,
         getDefaultLibLocation,
-        getDefaultLibFileName: options => ts.combinePaths(getDefaultLibLocation(), ts.getDefaultLibFileName(options)),
+        getDefaultLibFileName: options => tsInstance.combinePaths(getDefaultLibLocation(), tsInstance.getDefaultLibFileName(options)),
         writeFile,
-        getCurrentDirectory: ts.memoize(() => sys.getCurrentDirectory()),
+        getCurrentDirectory: tsInstance.memoize(() => sys.getCurrentDirectory()),
         useCaseSensitiveFileNames: () => sys.useCaseSensitiveFileNames,
         getCanonicalFileName,
         getNewLine: () => newLine,

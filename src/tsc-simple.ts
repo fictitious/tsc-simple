@@ -22,17 +22,17 @@ export interface CompileMapResult {
 }
 
 
-function parseTsConfig(system: ts.System, tsconfig?: {files?: string[], include?: string[]}, basePath?: string, configFileName?: string): {options: ts.CompilerOptions, fileNames: string[], errors: ts.Diagnostic[]} {
+function parseTsConfig(tsInstance: typeof ts, system: ts.System, tsconfig?: {files?: string[], include?: string[]}, basePath?: string, configFileName?: string): {options: ts.CompilerOptions, fileNames: string[], errors: ts.Diagnostic[]} {
     if (tsconfig) {
         const config = tsconfig.files || tsconfig.include ? tsconfig : {...tsconfig, include: []}; // stop it from scanning and adding all ts files from current directory
-        const {options, fileNames, errors} = ts.parseJsonConfigFileContent(config, system, basePath || system.getCurrentDirectory(), {}, configFileName || '<tsconfig>');
+        const {options, fileNames, errors} = tsInstance.parseJsonConfigFileContent(config, system, basePath || system.getCurrentDirectory(), {}, configFileName || '<tsconfig>');
         return {options, fileNames, errors: errors.filter(e => e.code !== 18003)}; // no input files is not an error here
     } else {
-        return {options: ts.getDefaultCompilerOptions(), fileNames: [], errors: []};
+        return {options: tsInstance.getDefaultCompilerOptions(), fileNames: [], errors: []};
     }
 }
 
-function formatDiagnostic(d: ts.Diagnostic, system: ts.System, theOnlySourceFile?: ts.SourceFile): string {
+function formatDiagnostic(tsInstance: typeof ts, d: ts.Diagnostic, system: ts.System, theOnlySourceFile?: ts.SourceFile): string {
     let fileName = '';
     let lineCol = '';
     if (d.file) {
@@ -42,8 +42,8 @@ function formatDiagnostic(d: ts.Diagnostic, system: ts.System, theOnlySourceFile
             lineCol = `(${p.line + 1},${p.character + 1}): `;
         }
     }
-    const category = ts.DiagnosticCategory[d.category];
-    const message = ts.flattenDiagnosticMessageText(d.messageText, system.newLine);
+    const category = tsInstance.DiagnosticCategory[d.category];
+    const message = tsInstance.flattenDiagnosticMessageText(d.messageText, system.newLine);
     return `${fileName}${lineCol}${category} TS${d.code}: ${message}`;
 }
 
@@ -71,16 +71,17 @@ function getProgramDiagnostics({program, parseOnly}: GetProgramDiagnostics): Dia
 
 
 interface CompileOrParseFiles {
+    tsInstance: typeof ts;
     options: ts.CompilerOptions;
     fileNames: string[];
     theOnlySourceFileName?: string;
     system: ts.System;
     parseOnly: boolean;
 }
-function compileOrParseFiles({options, fileNames, theOnlySourceFileName, system, parseOnly}: CompileOrParseFiles): CompileMapResult {
+function compileOrParseFiles({tsInstance, options, fileNames, theOnlySourceFileName, system, parseOnly}: CompileOrParseFiles): CompileMapResult {
 
-    const host = createCompilerHost(system, options);
-    const program = ts.createProgram(fileNames, options, host);
+    const host = createCompilerHost(tsInstance, system, options);
+    const program = tsInstance.createProgram(fileNames, options, host);
     if (!parseOnly) {
         program.emit();
     }
@@ -88,7 +89,7 @@ function compileOrParseFiles({options, fileNames, theOnlySourceFileName, system,
     return {
         program,
         diagnostics: getProgramDiagnostics({program, parseOnly}),
-        formatDiagnostic: (d: ts.Diagnostic) => formatDiagnostic(d, system, theOnlySourceFile),
+        formatDiagnostic: (d: ts.Diagnostic) => formatDiagnostic(tsInstance, d, system, theOnlySourceFile),
         getSourceFileNames: () => program.getSourceFiles().map(s => s.fileName),
         getSourceFile: (n: string) => program.getSourceFile(n)
     }
@@ -96,6 +97,7 @@ function compileOrParseFiles({options, fileNames, theOnlySourceFileName, system,
 
 
 interface CompileOrParseSources {
+    tsInstance: typeof ts;
     sources: Map<string, string>;
     options: ts.CompilerOptions;
     fileNames: string[];
@@ -104,13 +106,14 @@ interface CompileOrParseSources {
     onWrite?: OnWrite;
     parseOnly: boolean;
 }
-function compileOrParseSources({sources, options, fileNames, theOnlySourceFileName, system, onWrite, parseOnly}: CompileOrParseSources): CompileMapResult {
+function compileOrParseSources({tsInstance, sources, options, fileNames, theOnlySourceFileName, system, onWrite, parseOnly}: CompileOrParseSources): CompileMapResult {
     const simpleSys = createSimpleSys(system, sources, onWrite);
-    return compileOrParseFiles({options, fileNames: [...sources.keys(), ...fileNames], theOnlySourceFileName, system: simpleSys, parseOnly});
+    return compileOrParseFiles({tsInstance, options, fileNames: [...sources.keys(), ...fileNames], theOnlySourceFileName, system: simpleSys, parseOnly});
 }
 
 
 interface CompileOrParseSource {
+    tsInstance: typeof ts;
     source: string;
     options: ts.CompilerOptions;
     fileNames: string[];
@@ -118,9 +121,9 @@ interface CompileOrParseSource {
     onWrite?: OnWrite;
     parseOnly: boolean;
 }
-function compileOrParseSource({source, options, fileNames, system, onWrite, parseOnly}: CompileOrParseSource) {
+function compileOrParseSource({tsInstance, source, options, fileNames, system, onWrite, parseOnly}: CompileOrParseSource) {
     const theOnlySourceFileName = '$.ts';
-    const r = compileOrParseSources({sources: new Map([[theOnlySourceFileName, source]]), options, fileNames, theOnlySourceFileName, system, onWrite, parseOnly});
+    const r = compileOrParseSources({tsInstance, sources: new Map([[theOnlySourceFileName, source]]), options, fileNames, theOnlySourceFileName, system, onWrite, parseOnly});
     return {
         ...r,
         sourceFile: r.getSourceFile(theOnlySourceFileName)
@@ -134,34 +137,31 @@ export interface Compiler {
     parse(source: string): CompileResult;
 }
 export interface CreateCompiler {
+    tsInstance: typeof ts;
     tsconfig?: any;
     basePath?: string; // for resolving relative paths in tsconfig. default is cwd()
     sys?: ts.System;
 }
-function createCompiler({
-    tsconfig,
-    basePath,
-    sys
-}: CreateCompiler): Compiler {
+function createCompiler({tsInstance, tsconfig, basePath, sys}: CreateCompiler): Compiler {
 
-    const system = sys || ts.sys;
+    const system = sys || tsInstance.sys;
 
-    const {options, fileNames, errors} = parseTsConfig(system, tsconfig, basePath);
+    const {options, fileNames, errors} = parseTsConfig(tsInstance, system, tsconfig, basePath);
     if (errors.length > 0) {
-        throw new Error(errors.map(d => ts.flattenDiagnosticMessageText(d.messageText, system.newLine)).join(system.newLine));
+        throw new Error(errors.map(d => tsInstance.flattenDiagnosticMessageText(d.messageText, system.newLine)).join(system.newLine));
     }
 
     return {
         compile(source: string, onWrite?: OnWrite): CompileResult {
-            return compileOrParseSource({source, options, fileNames, system, onWrite, parseOnly: false});
+            return compileOrParseSource({tsInstance, source, options, fileNames, system, onWrite, parseOnly: false});
         },
 
         parse(source: string): CompileResult {
-            return compileOrParseSource({source, options, fileNames, system, parseOnly: true});
+            return compileOrParseSource({tsInstance, source, options, fileNames, system, parseOnly: true});
         },
 
         compileMap(sources: Map<string, string>, onWrite?: OnWrite): CompileMapResult {
-            return compileOrParseSources({sources, options, fileNames, system, onWrite, parseOnly: false})
+            return compileOrParseSources({tsInstance, sources, options, fileNames, system, onWrite, parseOnly: false})
         }
     };
 }

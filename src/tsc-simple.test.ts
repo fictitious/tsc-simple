@@ -6,6 +6,8 @@ import {assert} from 'chai';
 
 suite('tsc-simple', function() {
 
+    const tsInstance = ts;
+
     const tsconfig = {
         "compilerOptions": {
             "declaration": true,
@@ -19,7 +21,7 @@ suite('tsc-simple', function() {
     };
 
     test('a', function() {
-        const compiler = createCompiler({tsconfig});
+        const compiler = createCompiler({tsInstance, tsconfig});
 
         const out1: {[name: string]: string} = {};
 
@@ -30,7 +32,7 @@ suite('tsc-simple', function() {
             '$.d.ts': 'declare let x: number;\n'
         });
         assert.lengthOf(r1.sourceFile.statements, 1);
-        assert.equal(r1.sourceFile.statements[0].kind, ts.SyntaxKind.VariableStatement);
+        assert.equal(r1.sourceFile.statements[0].kind, tsInstance.SyntaxKind.VariableStatement);
         const nn = r1.getSourceFileNames();
         nn.forEach(n => {
             if (n != '$.ts' && !n.endsWith('lib.es5.d.ts') && !n.endsWith('lib.es2015.core.d.ts')) {
@@ -47,29 +49,29 @@ suite('tsc-simple', function() {
     });
 
     test('b', function() {
-        const compiler = createCompiler({});
+        const compiler = createCompiler({tsInstance});
         const r = compiler.compile('let x = 3 + 2');
         assert.deepEqual(r.diagnostics, []);
     });
 
     test('c', function() {
-        const compiler = createCompiler({tsconfig: {compilerOptions: {lib: ['es6']}}});
+        const compiler = createCompiler({tsInstance, tsconfig: {compilerOptions: {lib: ['es6']}}});
         const r = compiler.compile('let x = 3 + 2');
         assert.deepEqual(r.diagnostics, []);
     });
 
     test('d', function() {
-        const compiler = createCompiler({});
+        const compiler = createCompiler({tsInstance});
         const r = compiler.compile('let x = 3 + 2');
         assert.deepEqual(r.diagnostics, []);
     });
 
     test('e', function() {
-        const compiler = createCompiler({tsconfig: {compilerOptions: {lib:[]}}});
+        const compiler = createCompiler({tsInstance, tsconfig: {compilerOptions: {lib:[]}}});
         const r = compiler.parse('let x = z + 2');
         assert.deepEqual(r.diagnostics, []);
         assert.lengthOf(r.sourceFile.statements, 1);
-        assert.equal(r.sourceFile.statements[0].kind, ts.SyntaxKind.VariableStatement);
+        assert.equal(r.sourceFile.statements[0].kind, tsInstance.SyntaxKind.VariableStatement);
     });
 
 });
