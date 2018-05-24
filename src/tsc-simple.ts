@@ -80,7 +80,7 @@ interface CompileOrParseFiles {
 }
 function compileOrParseFiles({tsInstance, options, fileNames, theOnlySourceFileName, system, parseOnly}: CompileOrParseFiles): CompileMapResult {
 
-    const host = createCompilerHost(tsInstance, system, options);
+    const host = createCompilerHost({tsInstance, sys: system, options});
     const program = tsInstance.createProgram(fileNames, options, host);
     if (!parseOnly) {
         program.emit();

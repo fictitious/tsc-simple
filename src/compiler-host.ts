@@ -27,7 +27,14 @@ interface OutputFingerprint {
 
 // identical to TypeScipt built-in createCompilerHost
 // except that this one takes sys as arguments
-function createCompilerHost(tsInstance: typeof ts, sys: ts.System, options: ts.CompilerOptions, setParentNodes?: boolean): ts.CompilerHost {
+export interface CreateCompilerHost {
+    tsInstance: typeof ts;
+    sys: ts.System;
+    options: ts.CompilerOptions;
+    setParentNodes?: boolean;
+    defaultLibLocation?: string;
+}
+function createCompilerHost({tsInstance, sys, options, setParentNodes, defaultLibLocation}: CreateCompilerHost): ts.CompilerHost {
     const existingDirectories = tsInstance.createMap<boolean>();
 
     function getCanonicalFileName(fileName: string): string {
@@ -122,7 +129,7 @@ function createCompilerHost(tsInstance: typeof ts, sys: ts.System, options: ts.C
     }
 
     function getDefaultLibLocation(): string {
-        return tsInstance.getDirectoryPath(tsInstance.normalizePath(sys.getExecutingFilePath()));
+        return defaultLibLocation || tsInstance.getDirectoryPath(tsInstance.normalizePath(sys.getExecutingFilePath()));
     }
 
     const newLine = tsInstance.getNewLineCharacter(options);
