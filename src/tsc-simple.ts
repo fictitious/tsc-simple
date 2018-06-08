@@ -18,7 +18,7 @@ export interface CompileMapResult {
     program: ts.Program;
     formatDiagnostic(d: ts.Diagnostic): string;
     getSourceFileNames(): string[];
-    getSourceFile(name: string): ts.SourceFile;
+    getSourceFile(name: string): ts.SourceFile | undefined;
 }
 
 
@@ -126,7 +126,7 @@ function compileOrParseSource({tsInstance, source, options, fileNames, system, o
     const r = compileOrParseSources({tsInstance, sources: new Map([[theOnlySourceFileName, source]]), options, fileNames, theOnlySourceFileName, system, onWrite, parseOnly});
     return {
         ...r,
-        sourceFile: r.getSourceFile(theOnlySourceFileName)
+        sourceFile: r.getSourceFile(theOnlySourceFileName)!
     };
 }
 
