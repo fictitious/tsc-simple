@@ -100,7 +100,7 @@ function createCompilerHost({tsInstance, sys, options, setParentNodes, defaultLi
 
         sys.writeFile(fileName, data, writeByteOrderMark);
 
-        const mtimeAfter = sys.getModifiedTime!(fileName);
+        const mtimeAfter = sys.getModifiedTime!(fileName) || new Date(0);
 
         outputFingerprints.set(fileName, {
             hash,
