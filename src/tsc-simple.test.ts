@@ -6,7 +6,7 @@ import {assert} from 'chai';
 
 suite('tsc-simple', function() {
 
-    this.timeout(3000);
+    this.timeout(5000);
 
     const tsInstance = ts;
 
