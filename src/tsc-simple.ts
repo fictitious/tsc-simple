@@ -39,14 +39,13 @@ function formatDiagnostic(tsInstance: typeof ts, d: ts.Diagnostic, system: ts.Sy
         fileName = theOnlySourceFile && d.file === theOnlySourceFile ? '<source>' : d.file.fileName;
         if (d.start! >= 0) {
             const p = d.file.getLineAndCharacterOfPosition(d.start!);
-            lineCol = `(${p.line + 1},${p.character + 1}): `;
+            lineCol = `:${p.line + 1}:${p.character + 1}`;
         }
     }
-    const category = tsInstance.DiagnosticCategory[d.category];
+    const category = tsInstance.DiagnosticCategory[d.category].toLowerCase();
     const message = tsInstance.flattenDiagnosticMessageText(d.messageText, system.newLine);
-    return `${fileName}${lineCol}${category} TS${d.code}: ${message}`;
+    return `${fileName}${lineCol} - ${category} TS${d.code}: ${message}`;
 }
-
 
 export interface GetProgramDiagnostics {
     program: ts.Program;
