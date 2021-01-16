@@ -44,7 +44,7 @@ suite('tsc-simple', function() {
 
         const r2 = compiler.compile('let x = z + 2');
         assert.lengthOf(r2.diagnostics, 1);
-        assert.equal(r2.formatDiagnostic(r2.diagnostics[0]), '<source>(1,9): Error TS2304: Cannot find name \'z\'.');
+        assert.equal(r2.formatDiagnostic(r2.diagnostics[0]), '<source>:1:9 - error TS2304: Cannot find name \'z\'.');
 
         const r3 = compiler.compileMap(new Map([['A.ts', 'export class A {}'], ['B.ts', `import {A} from './A'; export class B extends A {}`]]));
         assert.lengthOf(r3.diagnostics, 0);
