@@ -22,7 +22,7 @@ export interface CompileMapResult {
 }
 
 
-function parseTsConfig(tsInstance: typeof ts, system: ts.System, tsconfig?: {files?: string[], include?: string[]}, basePath?: string, configFileName?: string): {options: ts.CompilerOptions, fileNames: string[], errors: ts.Diagnostic[]} {
+function parseTsConfig(tsInstance: typeof ts, system: ts.System, tsconfig?: {files?: readonly string[], include?: readonly string[]}, basePath?: string, configFileName?: string): {options: ts.CompilerOptions, fileNames: string[], errors: ts.Diagnostic[]} {
     if (tsconfig) {
         const config = tsconfig.files || tsconfig.include ? tsconfig : {...tsconfig, include: []}; // stop it from scanning and adding all ts files from current directory
         const {options, fileNames, errors} = tsInstance.parseJsonConfigFileContent(config, system, basePath || system.getCurrentDirectory(), {}, configFileName || '<tsconfig>');
